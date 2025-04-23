@@ -1,0 +1,56 @@
+require no.ssb.fdb:40 as fdb
+
+create-dataset data
+
+import fdb/BEFOLKNING_BYDEL 2025-01-01 as bydel
+keep if substr(bydel,1,4) =='1103'
+
+import fdb/BOSATTEFDT_BOSTED 2023-12-31 as kom
+keep if substr(kom,1,4) == '1103'
+
+import fdb/BEFOLKNING_LANDBAK3GEN as land
+
+import fdb/BEFOLKNING_INVKAT as innv
+keep if substr(innv,1,1) == 'B' |  substr(innv,1,1) == 'C' 
+
+
+// STAVANGER //
+
+
+// Absolutte tall
+
+// Innvandrere
+tabulate land kom if substr(innv,1,1) == 'B'
+
+// norskfødte med innvandrerforeldre
+tabulate land kom if substr(innv,1,1) == 'C'
+
+
+// Prosent av kolonnesum
+
+// Innvandrere
+tabulate land kom if substr(innv,1,1) == 'B', colpct
+
+// norskfødte med innvandrerforeldre
+tabulate land kom if substr(innv,1,1) == 'C', colpct
+
+
+
+// BYDEL //
+
+// Absolutte tall
+
+// Innvandrere
+tabulate land bydel if substr(innv,1,1) == 'B'
+
+// norskfødte med innvandrerforeldre
+tabulate land bydel if substr(innv,1,1) == 'C'
+
+
+// Prosent av kolonnesum
+
+// Innvandrere
+tabulate land bydel if substr(innv,1,1) == 'B', colpct
+
+// norskfødte med innvandrerforeldre
+tabulate land bydel if substr(innv,1,1) == 'C', colpct
