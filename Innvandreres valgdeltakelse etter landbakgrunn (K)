@@ -19,4 +19,4 @@ replace aldersgr = '18-39 år' if alder >= 18 & alder <= 39
 replace aldersgr = '40-64 år' if alder >= 40 & alder <= 64
 replace aldersgr = '65 år og eldre' if alder >= 65
 
-tabulate landbakgrunn stemt21 aldersgr if substr(innv,1,2)
+tabulate landbakgrunn stemt21 aldersgr if substr(innv,1,2) == 'B
