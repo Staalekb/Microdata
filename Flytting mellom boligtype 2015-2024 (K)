@@ -1,0 +1,44 @@
+require no.ssb.fdb:41 as db
+
+create-dataset boligtyper
+
+import db/BEFOLKNING_STATUSKODE 2024-01-01 as status
+
+import db/BEFOLKNING_FOEDSELS_AAR_MND as faarmnd 
+generate alder = 2015-int(faarmnd/100)
+
+// 2015
+import db/BOFORHOLD_BYGNINGSTYPE 2015-01-01 as type15
+destring type15
+
+recode type15 (111 112 113 = 1) (121 123 131 133 135 151 = 2 ) (122 124 136 141 144 159 = 3)  (142 143 145 146 152 = 4) (161/840 = 5)
+
+define-labels gr15  1 'Frittliggende enebolig eller våningshus' 2 'Hus i kjede, rekkehus/terrassehus, vertikaldelt tomannsbolig' 3 'Horisontaltdelt tomannsbolig eller annet boligbygg med mindre enn 3 etasjer' 4 'Blokk' 5 'Andre bygg enn boligbygg'
+
+assign-labels type15 gr15
+
+
+import db/BEFOLKNING_KOMMNR_FORMELL 2015-01-01 as bosted15
+keep if substr(bosted15,1,4) == '1103'
+//keep if alder >=50 & alder <=80
+
+// 2024
+
+import db/BOFORHOLD_BYGNINGSTYPE 2024-01-01 as type24
+destring type24
+
+recode type24 (111 112 113 = 1) (121 123 131 133 135 151 = 2 ) (122 124 136 141 144 159 = 3)  (142 143 145 146 152 = 4) (161/840 = 5)
+
+define-labels gr24  1 'Frittliggende enebolig eller våningshus' 2 'Hus i kjede, rekkehus/terrassehus, vertikaldelt tomannsbolig' 3 'Horisontaltdelt tomannsbolig eller annet boligbygg med mindre enn 3 etasjer' 4 'Blokk' 5 'Andre bygg enn boligbygg'
+
+assign-labels type24 gr24
+
+
+import db/BEFOLKNING_KOMMNR_FORMELL 2024-01-01 as bosted24
+keep if substr(bosted24,1,4) == '1103'
+
+
+sankey type15 type24 if substr(status,1,1) == '1' & alder >= 50 & alder <=80
+
+tabulate type15 if alder >= 50 & alder <=80
+tabulate type24 if alder >= 50 & alder <=80
