@@ -1,44 +1,83 @@
-require no.ssb.fdb:41 as db
+require no.ssb.fdb:42 as db
 
 create-dataset boligtyper
 
-import db/BEFOLKNING_STATUSKODE 2024-01-01 as status
+import db/BEFOLKNING_STATUSKODE 2015-01-01 as status15
 
 import db/BEFOLKNING_FOEDSELS_AAR_MND as faarmnd 
 generate alder = 2015-int(faarmnd/100)
 
-// 2015
-import db/BOFORHOLD_BYGNINGSTYPE 2015-01-01 as type15
-destring type15
-
-recode type15 (111 112 113 = 1) (121 123 131 133 135 151 = 2 ) (122 124 136 141 144 159 = 3)  (142 143 145 146 152 = 4) (161/840 = 5)
-
-define-labels gr15  1 'Frittliggende enebolig eller våningshus' 2 'Hus i kjede, rekkehus/terrassehus, vertikaldelt tomannsbolig' 3 'Horisontaltdelt tomannsbolig eller annet boligbygg med mindre enn 3 etasjer' 4 'Blokk' 5 'Andre bygg enn boligbygg'
-
-assign-labels type15 gr15
-
-
+//2015
+import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2015-01-01 as type15
 import db/BEFOLKNING_KOMMNR_FORMELL 2015-01-01 as bosted15
-keep if substr(bosted15,1,4) == '1103'
-//keep if alder >=50 & alder <=80
+keep if substr(bosted15,1,4) == '1103' | substr(bosted15,1,4) == '1141' | substr(bosted15,1,4) == '1142'
+
+//tabulate status15
+
+// 2020
+import db/BEFOLKNING_STATUSKODE 2020-01-01 as status20
+import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2020-01-01 as type20
+import db/BEFOLKNING_KOMMNR_FORMELL 2020-01-01 as bosted20
+
+generate gr20 = "1 Død" if substr(status20,1,1) == '5'
+replace gr20 = "2 Utvandret" if (substr(status20,1,1) == '3')
+replace gr20 = "3 Ut av Stavanger" if (substr(status20,1,1) == '1') & (substr(bosted20,1,4) != '1103')
+replace gr20 = "4 Enebolig" if (substr(status20,1,1) == '1' ) & (substr(bosted20,1,4) == '1103') & (substr(type20,1,2) == "01")
+replace gr20 = "5 Tomannsbolig" if (substr(status20,1,1) == '1' ) & (substr(bosted20,1,4) == '1103') & (substr(type20,1,2) == "02")
+replace gr20 = "6 Rekke/kjedehus, andre småhus" if (substr(status20,1,1) == '1' ) & (substr(bosted20,1,4) == '1103') & (substr(type20,1,2) == "03")
+replace gr20 = "7 Store boligbygg" if (substr(status20,1,1) == '1' ) & (substr(bosted20,1,4) == '1103') & (substr(type20,1,2) == "04")
+replace gr20 = "8 Bygning for bofellesskap" if (substr(status20,1,1) == '1' ) & (substr(bosted20,1,4) == '1103') & (substr(type20,1,2) == "05")
+replace gr20 = "9 Andre bygningstyper" if (substr(status20,1,1) == '1' ) & (substr(bosted20,1,4) == '1103') & (substr(type20,1,2) == "06")
+
+generate inndeling20 = "Inne" if (substr(gr20,1,1) != '1' & substr(gr20,1,1) != '2' & substr(gr20,1,1) != '3')
+replace inndeling20 = "Ute" if (substr(gr20,1,1) == '1' | substr(gr20,1,1) == '2' | substr(gr20,1,1) == '3')
+
+
+// 2022
+import db/BEFOLKNING_STATUSKODE 2022-01-01 as status22
+import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2022-01-01 as type22
+import db/BEFOLKNING_KOMMNR_FORMELL 2022-01-01 as bosted22
+
+generate gr22 = "1 Død" if substr(status22,1,1) == '5'
+replace gr22 = "2 Utvandret" if (substr(status22,1,1) == '3')
+replace gr22 = "3 Ut av Stavanger" if (substr(status22,1,1) == '1') & (substr(bosted22,1,4) != '1103')
+replace gr22 = "4 Enebolig" if (substr(status22,1,1) == '1' ) & (substr(bosted22,1,4) == '1103') & (substr(type22,1,2) == "01")
+replace gr22 = "5 Tomannsbolig" if (substr(status22,1,1) == '1' ) & (substr(bosted22,1,4) == '1103') & (substr(type22,1,2) == "02")
+replace gr22 = "6 Rekke/kjedehus, andre småhus" if (substr(status22,1,1) == '1' ) & (substr(bosted22,1,4) == '1103') & (substr(type22,1,2) == "03")
+replace gr22 = "7 Store boligbygg" if (substr(status22,1,1) == '1' ) & (substr(bosted22,1,4) == '1103') & (substr(type22,1,2) == "04")
+replace gr22 = "8 Bygning for bofellesskap" if (substr(status22,1,1) == '1' ) & (substr(bosted22,1,4) == '1103') & (substr(type22,1,2) == "05")
+replace gr22 = "9 Andre bygningstyper" if (substr(status22,1,1) == '1' ) & (substr(bosted22,1,4) == '1103') & (substr(type22,1,2) == "06")
+
+generate inndeling22 = "Inne" if (substr(gr22,1,1) != '1' & substr(gr22,1,1) != '2' & substr(gr22,1,1) != '3')
+replace inndeling22 = "Ute" if (substr(gr22,1,1) == '1' | substr(gr22,1,1) == '2' | substr(gr22,1,1) == '3')
+
 
 // 2024
-
-import db/BOFORHOLD_BYGNINGSTYPE 2024-01-01 as type24
-destring type24
-
-recode type24 (111 112 113 = 1) (121 123 131 133 135 151 = 2 ) (122 124 136 141 144 159 = 3)  (142 143 145 146 152 = 4) (161/840 = 5)
-
-define-labels gr24  1 'Frittliggende enebolig eller våningshus' 2 'Hus i kjede, rekkehus/terrassehus, vertikaldelt tomannsbolig' 3 'Horisontaltdelt tomannsbolig eller annet boligbygg med mindre enn 3 etasjer' 4 'Blokk' 5 'Andre bygg enn boligbygg'
-
-assign-labels type24 gr24
-
-
+import db/BEFOLKNING_STATUSKODE 2024-01-01 as status24
+import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2024-01-01 as type24
 import db/BEFOLKNING_KOMMNR_FORMELL 2024-01-01 as bosted24
-keep if substr(bosted24,1,4) == '1103'
+
+tabulate status24
+tabulate type24
+
+generate gr24 = "1 Død" if substr(status24,1,1) == '5'
+replace gr24 = "2 Utvandret" if (substr(status24,1,1) == '3')
+replace gr24 = "3 Ut av Stavanger" if (substr(status24,1,1) == '1') & (substr(bosted24,1,4) != '1103')
+replace gr24 = "4 Enebolig" if (substr(status24,1,1) == '1' ) & (substr(bosted24,1,4) == '1103') & (substr(type24,1,2) == "01")
+replace gr24 = "5 Tomannsbolig" if (substr(status24,1,1) == '1' ) & (substr(bosted24,1,4) == '1103') & (substr(type24,1,2) == "02")
+replace gr24 = "6 Rekke/kjedehus, andre småhus" if (substr(status24,1,1) == '1' ) & (substr(bosted24,1,4) == '1103') & (substr(type24,1,2) == "03")
+replace gr24 = "7 Store boligbygg" if (substr(status24,1,1) == '1' ) & (substr(bosted24,1,4) == '1103') & (substr(type24,1,2) == "04")
+replace gr24 = "8 Bygning for bofellesskap" if (substr(status24,1,1) == '1' ) & (substr(bosted24,1,4) == '1103') & (substr(type24,1,2) == "05")
+replace gr24 = "9 Andre bygningstyper" if (substr(status24,1,1) == '1' ) & (substr(bosted24,1,4) == '1103') & (substr(type24,1,2) == "06")
+
+generate inndeling24 = "Inne" if (substr(gr24,1,1) != '1' & substr(gr24,1,1) != '2' & substr(gr24,1,1) != '3')
+replace inndeling24 = "Ute" if (substr(gr24,1,1) == '1' | substr(gr24,1,1) == '2' | substr(gr24,1,1) == '3')
+
+sankey type15  gr20  gr22  gr24 if (substr(status15,1,1) == '1') & (alder >= 60 & alder <=80)
 
 
-sankey type15 type24 if substr(status,1,1) == '1' & alder >= 50 & alder <=80
 
-tabulate type15 if alder >= 50 & alder <=80
-tabulate type24 if alder >= 50 & alder <=80
+
+
+
+
