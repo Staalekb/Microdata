@@ -1,0 +1,157 @@
+require no.ssb.fdb:42 as db
+
+create-dataset Flytting
+
+
+import db/BEFOLKNING_FOEDSELS_AAR_MND as faarmnd 
+generate alder = 2020-int(faarmnd/100)
+keep if alder >=25 & alder <=35
+
+
+import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2020-01-01 as byggningstype20
+keep if substr(byggningstype20,1,2) != '01' & substr(byggningstype20,1,2) != '03'
+import db/BOFORHOLD_BRUKSENHETSTYPE 2020-01-01 as bruksenhet20
+keep if substr(bruksenhet20,1,1) == 'B'
+
+
+import db/BEFOLKNING_KOMMNR_FORMELL 2020-01-01 as kom20
+keep if substr(kom20,1,4) == '1103'
+
+generate byggninstype20dikotom = "Andre bygninstyper" if substr(byggningstype20,1,2) != '01' & substr(byggningstype20,1,2) != '03'
+tabulate byggninstype20dikotom
+
+import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2021-01-01 as byggningstype21
+import db/BEFOLKNING_KOMMNR_FORMELL 2021-01-01 as kom21
+import db/BOFORHOLD_BRUKSENHETSTYPE 2021-01-01 as bruksenhet21
+keep if substr(bruksenhet21,1,1) == 'B'
+
+import db/BEFOLKNING_BARN 2020-01-01 as barn20
+
+
+generate kom21gr = "Enebolig/rekkehus i annet fylke" if (substr(kom21,1,2) != "11") & ((substr(byggningstype21,1,2) == "01") | (substr(byggningstype21,1,2) == "03"))
+replace kom21gr = "Andre bygningstyper i annet fylke" if (substr(kom21,1,2) != "11") & ((substr(byggningstype21,1,2) != "01") & (substr(byggningstype21,1,2) != "03"))
+
+replace kom21gr = "Enebolig/rekkehus i annnen kommune i Rogaland" if (substr(kom21,1,2) == "11" & substr(kom21,1,4) != "1103" & substr(kom21,1,4) != "1108" & substr(kom21,1,4) != "1124") & ((substr(byggningstype21,1,2) == "01") | (substr(byggningstype21,1,2) == "03"))
+replace kom21gr = "Andre bygningstyper i annen kommune i Rogaland" if (substr(kom21,1,2) == "11" & substr(kom21,1,4) != "1103" & substr(kom21,1,4) != "1108" & substr(kom21,1,4) != "1124") & ((substr(byggningstype21,1,2) != "01") & (substr(byggningstype21,1,2) != "03"))
+
+replace kom21gr = "Enebolig/rekkehus Stavanger" if (substr(kom21,1,4) == "1103") & ((substr(byggningstype21,1,2) == "01") | (substr(byggningstype21,1,2) == "03"))
+replace kom21gr = "Andre bygningstyper Stavanger" if (substr(kom21,1,4) == "1103") & ((substr(byggningstype21,1,2) != "01") & (substr(byggningstype21,1,2) != "03"))
+
+replace kom21gr = "Enebolig/rekkehus Sandnes" if (substr(kom21,1,4) == "1108") & ((substr(byggningstype21,1,2) == "01") | (substr(byggningstype21,1,2) == "03"))
+replace kom21gr = "Andre bygningstyper Sandnes" if (substr(kom21,1,4) == "1108") & ((substr(byggningstype21,1,2) != "01") & (substr(byggningstype21,1,2) != "03"))
+
+replace kom21gr = "Enebolig/rekkehus Sola" if (substr(kom21,1,4) == "1124") & ((substr(byggningstype21,1,2) == "01") | (substr(byggningstype21,1,2) == "03"))
+replace kom21gr = "Andre bygningstyper Sola" if (substr(kom21,1,4) == "1124") & ((substr(byggningstype21,1,2) != "01") & (substr(byggningstype21,1,2) != "03"))
+
+//replace kom21gr = "Enebolig/rekkehus Randaberg" if (substr(kom21,1,4) == "1127") & ((substr(byggningstype21,1,2) == "01") | (substr(byggningstype21,1,2) == "03"))
+//replace kom21gr = "Andre bygningstyper Randaberg" if (substr(kom21,1,4) == "1127") & ((substr(byggningstype21,1,2) != "01") & (substr(byggningstype21,1,2) != "03"))
+
+
+import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2022-01-01 as byggningstype22
+import db/BEFOLKNING_KOMMNR_FORMELL 2022-01-01 as kom22
+import db/BOFORHOLD_BRUKSENHETSTYPE 2022-01-01 as bruksenhet22
+keep if substr(bruksenhet22,1,1) == 'B'
+
+generate kom22gr = "Enebolig/rekkehus i annet fylke" if (substr(kom22,1,2) != "11") & ((substr(byggningstype22,1,2) == "01") | (substr(byggningstype22,1,2) == "03"))
+replace kom22gr = "Andre bygningstyper i annet fylke" if (substr(kom22,1,2) != "11") & ((substr(byggningstype22,1,2) != "01") & (substr(byggningstype22,1,2) != "03"))
+
+replace kom22gr = "Enebolig/rekkehus i annnen kommune i Rogaland" if (substr(kom22,1,2) == "11" & substr(kom22,1,4) != "1103" & substr(kom22,1,4) != "1108" & substr(kom22,1,4) != "1124") & ((substr(byggningstype22,1,2) == "01") | (substr(byggningstype22,1,2) == "03"))
+replace kom22gr = "Andre bygningstyper i annen kommune i Rogaland" if (substr(kom22,1,2) == "11" & substr(kom22,1,4) != "1103" & substr(kom22,1,4) != "1108" & substr(kom22,1,4) != "1124") & ((substr(byggningstype22,1,2) != "01") & (substr(byggningstype22,1,2) != "03"))
+
+
+replace kom22gr = "Enebolig/rekkehus Stavanger" if (substr(kom22,1,4) == "1103") & ((substr(byggningstype22,1,2) == "01") | (substr(byggningstype22,1,2) == "03"))
+replace kom22gr = "Andre bygningstyper Stavanger" if (substr(kom22,1,4) == "1103") & ((substr(byggningstype22,1,2) != "01") & (substr(byggningstype22,1,2) != "03"))
+
+replace kom22gr = "Enebolig/rekkehus Sandnes" if (substr(kom22,1,4) == "1108") & ((substr(byggningstype22,1,2) == "01") | (substr(byggningstype22,1,2) == "03"))
+replace kom22gr = "Andre bygningstyper Sandnes" if (substr(kom22,1,4) == "1108") & ((substr(byggningstype22,1,2) != "01") & (substr(byggningstype22,1,2) != "03"))
+
+replace kom22gr = "Enebolig/rekkehus Sola" if (substr(kom22,1,4) == "1124") & ((substr(byggningstype22,1,2) == "01") | (substr(byggningstype22,1,2) == "03"))
+replace kom22gr = "Andre bygningstyper Sola" if (substr(kom22,1,4) == "1124") & ((substr(byggningstype22,1,2) != "01") & (substr(byggningstype22,1,2) != "03"))
+
+//replace kom22gr = "Enebolig/rekkehus Randaberg" if (substr(kom22,1,4) == "1127") & ((substr(byggningstype22,1,2) == "01") | (substr(byggningstype22,1,2) == "03"))
+//replace kom22gr = "Andre bygningstyper Randaberg" if (substr(kom22,1,4) == "1127") & ((substr(byggningstype22,1,2) != "01") & (substr(byggningstype22,1,2) != "03"))
+
+
+import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2023-01-01 as byggningstype23
+import db/BEFOLKNING_KOMMNR_FORMELL 2023-01-01 as kom23
+import db/BOFORHOLD_BRUKSENHETSTYPE 2023-01-01 as bruksenhet23
+keep if substr(bruksenhet23,1,1) == 'B'
+
+generate kom23gr = "Enebolig/rekkehus i annet fylke" if (substr(kom23,1,2) != "11") & ((substr(byggningstype23,1,2) == "01") | (substr(byggningstype23,1,2) == "03"))
+replace kom23gr = "Andre bygningstyper i annet fylke" if (substr(kom23,1,2) != "11") & ((substr(byggningstype23,1,2) != "01") & (substr(byggningstype23,1,2) != "03"))
+
+replace kom23gr = "Enebolig/rekkehus i annnen kommune i Rogaland" if (substr(kom23,1,2) == "11" & substr(kom23,1,4) != "1103" & substr(kom23,1,4) != "1108" & substr(kom23,1,4) != "1124") & ((substr(byggningstype23,1,2) == "01") | (substr(byggningstype23,1,2) == "03"))
+replace kom23gr = "Andre bygningstyper i annen kommune i Rogaland" if (substr(kom23,1,2) == "11" & substr(kom23,1,4) != "1103" & substr(kom23,1,4) != "1108" & substr(kom23,1,4) != "1124") & ((substr(byggningstype23,1,2) != "01") & (substr(byggningstype23,1,2) != "03"))
+
+replace kom23gr = "Enebolig/rekkehus Stavanger" if (substr(kom23,1,4) == "1103") & ((substr(byggningstype23,1,2) == "01") | (substr(byggningstype23,1,2) == "03"))
+replace kom23gr = "Andre bygningstyper Stavanger" if (substr(kom23,1,4) == "1103") & ((substr(byggningstype23,1,2) != "01") & (substr(byggningstype23,1,2) != "03"))
+
+replace kom23gr = "Enebolig/rekkehus Sandnes" if (substr(kom23,1,4) == "1108") & ((substr(byggningstype23,1,2) == "01") | (substr(byggningstype23,1,2) == "03"))
+replace kom23gr = "Andre bygningstyper Sandnes" if (substr(kom23,1,4) == "1108") & ((substr(byggningstype23,1,2) != "01") & (substr(byggningstype23,1,2) != "03"))
+
+replace kom23gr = "Enebolig/rekkehus Sola" if (substr(kom23,1,4) == "1124") & ((substr(byggningstype23,1,2) == "01") | (substr(byggningstype23,1,2) == "03"))
+replace kom23gr = "Andre bygningstyper Sola" if (substr(kom23,1,4) == "1124") & ((substr(byggningstype23,1,2) != "01") & (substr(byggningstype23,1,2) != "03"))
+
+//replace kom23gr = "Enebolig/rekkehus Randaberg" if (substr(kom23,1,4) == "1127") & ((substr(byggningstype23,1,2) == "01") | (substr(byggningstype23,1,2) == "03"))
+//replace kom23gr = "Andre bygningstyper Randaberg" if (substr(kom23,1,4) == "1127") & ((substr(byggningstype23,1,2) != "01") & (substr(byggningstype23,1,2) != "03"))
+
+
+import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2024-01-01 as byggningstype24
+import db/BEFOLKNING_KOMMNR_FORMELL 2024-01-01 as kom24
+import db/BOFORHOLD_BRUKSENHETSTYPE 2024-01-01 as bruksenhet24
+keep if substr(bruksenhet24,1,1) == 'B'
+
+import db/BEFOLKNING_BARN 2024-01-01 as barn24
+
+generate byggningstype24dikotom = "Enebolig/rekkehus" if substr(byggningstype24,1,2) == '01' | substr(byggningstype24,1,2) == '03'
+replace byggningstype24dikotom = "Andre bygningstyper" if substr(byggningstype24,1,2) != '01' & substr(byggningstype24,1,2) != '03'
+
+tabulate byggningstype24dikotom
+
+generate kom24gr = "Enebolig/rekkehus i annet fylke" if (substr(kom24,1,2) != "11") & ((substr(byggningstype24,1,2) == "01") | (substr(byggningstype24,1,2) == "03"))
+replace kom24gr = "Andre bygningstyper i annet fylke" if (substr(kom24,1,2) != "11") & ((substr(byggningstype24,1,2) != "01") & (substr(byggningstype24,1,2) != "03"))
+
+replace kom24gr = "Enebolig/rekkehus i annnen kommune i Rogaland" if (substr(kom24,1,2) == "11" & substr(kom24,1,4) != "1103" & substr(kom24,1,4) != "1108" & substr(kom24,1,4) != "1124") & ((substr(byggningstype24,1,2) == "01") | (substr(byggningstype24,1,2) == "03"))
+replace kom24gr = "Andre bygningstyper i annen kommune i Rogaland" if (substr(kom24,1,2) == "11" & substr(kom24,1,4) != "1103" & substr(kom24,1,4) != "1108" & substr(kom24,1,4) != "1124") & ((substr(byggningstype24,1,2) != "01") & (substr(byggningstype24,1,2) != "03"))
+
+replace kom24gr = "Enebolig/rekkehus Stavanger" if (substr(kom24,1,4) == "1103") & ((substr(byggningstype24,1,2) == "01") | (substr(byggningstype24,1,2) == "03"))
+replace kom24gr = "Andre bygningstyper Stavanger" if (substr(kom24,1,4) == "1103") & ((substr(byggningstype24,1,2) != "01") & (substr(byggningstype24,1,2) != "03"))
+
+replace kom24gr = "Enebolig/rekkehus Sandnes" if (substr(kom24,1,4) == "1108") & ((substr(byggningstype24,1,2) == "01") | (substr(byggningstype24,1,2) == "03"))
+replace kom24gr = "Andre bygningstyper Sandnes" if (substr(kom24,1,4) == "1108") & ((substr(byggningstype24,1,2) != "01") & (substr(byggningstype24,1,2) != "03"))
+
+replace kom24gr = "Enebolig/rekkehus Sola" if (substr(kom24,1,4) == "1124") & ((substr(byggningstype24,1,2) == "01") | (substr(byggningstype24,1,2) == "03"))
+replace kom24gr = "Andre bygningstyper Sola" if (substr(kom24,1,4) == "1124") & ((substr(byggningstype24,1,2) != "01") & (substr(byggningstype24,1,2) != "03"))
+
+//replace kom24gr = "Enebolig/rekkehus Randaberg" if (substr(kom24,1,4) == "1127") & ((substr(byggningstype24,1,2) == "01") | (substr(byggningstype24,1,2) == "03"))
+//replace kom24gr = "Andre bygningstyper Randaberg" if (substr(kom24,1,4) == "1127") & ((substr(byggningstype24,1,2) != "01") & (substr(byggningstype24,1,2) != "03"))
+
+
+generate sted24 = "Annet fylke" if (substr(kom24,1,2) != "11") 
+replace sted24 = "Annnen kommune i Rogaland" if (substr(kom24,1,2) == "11" & substr(kom24,1,4) != "1103" & substr(kom24,1,4) != "1108" & substr(kom24,1,4) != "1124") 
+replace sted24 = "Stavanger" if (substr(kom24,1,4) == "1103") 
+replace sted24 = "Sandnes" if (substr(kom24,1,4) == "1108")
+replace sted24 = "Sola" if (substr(kom24,1,4) == "1124") 
+
+
+sankey kom20 kom21gr kom22gr kom23gr kom24gr 
+
+sankey byggninstype20dikotom byggningstype24dikotom
+sankey kom20 sted24
+sankey byggninstype20dikotom byggningstype24dikotom kom24gr
+
+sankey byggninstype20dikotom byggningstype24dikotom kom24gr  if (substr(barn20,1,1) == '0') & (substr(barn24,1,1) == '0') 
+sankey byggninstype20dikotom byggningstype24dikotom kom24gr  if (substr(barn20,1,1) == '0') & (substr(barn24,1,1) == '1')  
+
+sankey byggninstype20dikotom kom24gr if substr(byggningstype24,1,2) == '01'| substr(byggningstype24,1,2) == '03' & (substr(barn20,1,1) == '0') & (substr(barn24,1,1) == '0')
+sankey byggninstype20dikotom kom24gr if substr(byggningstype24,1,2) == '01'| substr(byggningstype24,1,2) == '03' & (substr(barn20,1,1) == '0') & (substr(barn24,1,1) == '1')
+
+//sankey byggninstype20dikotom byggningstype24dikotom 
+//sankey byggninstype20dikotom byggningstype24dikotom if (substr(barn20,1,1) == '0')
+//sankey byggninstype20dikotom byggningstype24dikotom if (substr(barn20,1,1) == '0') & (substr(barn24,1,1) == '0')
+//sankey byggninstype20dikotom byggningstype24dikotom if (substr(barn20,1,1) == '0') & (substr(barn24,1,1) == '1')
+
+//sankey kom20 sted24 
+//sankey kom20 sted24  if (substr(barn20,1,1) == '0') 
+//sankey kom20 sted24 if (substr(barn20,1,1) == '0') & (substr(barn24,1,1) == '0')
+//sankey kom20 sted24 if (substr(barn20,1,1) == '0') & (substr(barn24,1,1) == '1')
