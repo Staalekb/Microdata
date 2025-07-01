@@ -2,8 +2,18 @@ require no.ssb.fdb:42 as db
 
 create-dataset boligtyper
 
+
+textblock Angir kohort
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+endblock
+
 let maxAlder = 80
-let minAlder = 65
+let minAlder = 60
+
+
+textblock henter statuskode og alder for første år i perioden
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+endblock
 
 import db/BEFOLKNING_STATUSKODE 2015-01-01 as status15
 keep if substr(status15,1,1) == '1'
@@ -120,6 +130,10 @@ sankey grovinndeling15 grovinndeling24 gr24 if (grovinndeling15 == 'Enebolig/rek
 
 sankey grovinndeling15 grovinndeling20 grovinndeling22 grovinndeling24
 
+
+textblock Tabeller
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+endblock
 
 reshape-to-panel gr
 tabulate gr date@panel, colpct
