@@ -2,19 +2,36 @@ require no.ssb.fdb:42 as db
 
 create-dataset boligtyper
 
+let maxAlder = 80
+let minAlder = 60
+
 import db/BEFOLKNING_STATUSKODE 2015-01-01 as status15
+keep if substr(status15,1,1) == '1'
 
 import db/BEFOLKNING_FOEDSELS_AAR_MND as faarmnd 
 generate alder = 2015-int(faarmnd/100)
+keep if (alder >= $minAlder & alder <= $maxAlder) 
+
+textblock 2015
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+endblock
 
 //2015
 import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2015-01-01 as type15
 import db/BEFOLKNING_KOMMNR_FORMELL 2015-01-01 as bosted15
 keep if substr(bosted15,1,4) == '1103' | substr(bosted15,1,4) == '1141' | substr(bosted15,1,4) == '1142'
 
-//tabulate status15
+generate kom15 = "Stavanger" if (substr(bosted15,1,4) == '1103' | substr(bosted15,1,4) == '1141' | substr(bosted15,1,4) == '1142')
 
-// 2020
+generate grovinndeling15 = "Andre" if (substr(type15,1,2) != '01' & substr(type15,1,2) != '03')
+replace grovinndeling15 = "Enebolig/rekkehus" if (substr(type15,1,2) == '01' | substr(type15,1,2) == '03')
+
+
+
+textblock 2020
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+endblock
+
 import db/BEFOLKNING_STATUSKODE 2020-01-01 as status20
 import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2020-01-01 as type20
 import db/BEFOLKNING_KOMMNR_FORMELL 2020-01-01 as bosted20
@@ -32,8 +49,15 @@ replace gr20 = "9 Andre bygningstyper" if (substr(status20,1,1) == '1' ) & (subs
 generate inndeling20 = "Inne" if (substr(gr20,1,1) != '1' & substr(gr20,1,1) != '2' & substr(gr20,1,1) != '3')
 replace inndeling20 = "Ute" if (substr(gr20,1,1) == '1' | substr(gr20,1,1) == '2' | substr(gr20,1,1) == '3')
 
+generate grovinndeling20 = "Ute" if (substr(gr20,1,1) == '1' | substr(gr20,1,1) == '2' | substr(gr20,1,1) == '3')
+replace grovinndeling20 = "Enebolig/rekkehus" if (substr(gr20,1,1) == '4' | substr(gr20,1,1) == '6')
+replace grovinndeling20 = "Andre" if (substr(gr20,1,1) == '5' | substr(gr20,1,1) == '7'  | substr(gr20,1,1) == '8' |  substr(gr20,1,1) == '9')
 
-// 2022
+
+textblock 2022
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+endblock
+
 import db/BEFOLKNING_STATUSKODE 2022-01-01 as status22
 import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2022-01-01 as type22
 import db/BEFOLKNING_KOMMNR_FORMELL 2022-01-01 as bosted22
@@ -51,14 +75,20 @@ replace gr22 = "9 Andre bygningstyper" if (substr(status22,1,1) == '1' ) & (subs
 generate inndeling22 = "Inne" if (substr(gr22,1,1) != '1' & substr(gr22,1,1) != '2' & substr(gr22,1,1) != '3')
 replace inndeling22 = "Ute" if (substr(gr22,1,1) == '1' | substr(gr22,1,1) == '2' | substr(gr22,1,1) == '3')
 
+generate grovinndeling22 = "Ute" if (substr(gr22,1,1) == "1" | substr(gr22,1,1) == "2" | substr(gr22,1,1) == "3")
+replace grovinndeling22 = "Enebolig/rekkehus" if (substr(gr22,1,1) == "4" | substr(gr22,1,1) == "6")
+replace grovinndeling22 = "Andre" if (substr(gr22,1,1) == "5" | substr(gr22,1,1) == "7" | substr(gr22,1,1) == "8" | substr(gr22,1,1) == "9")
 
-// 2024
+
+textblock 2024
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+endblock
+
 import db/BEFOLKNING_STATUSKODE 2024-01-01 as status24
 import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2024-01-01 as type24
 import db/BEFOLKNING_KOMMNR_FORMELL 2024-01-01 as bosted24
 
-tabulate status24
-tabulate type24
+
 
 generate gr24 = "1 Død" if substr(status24,1,1) == '5'
 replace gr24 = "2 Utvandret" if (substr(status24,1,1) == '3')
@@ -73,11 +103,25 @@ replace gr24 = "9 Andre bygningstyper" if (substr(status24,1,1) == '1' ) & (subs
 generate inndeling24 = "Inne" if (substr(gr24,1,1) != '1' & substr(gr24,1,1) != '2' & substr(gr24,1,1) != '3')
 replace inndeling24 = "Ute" if (substr(gr24,1,1) == '1' | substr(gr24,1,1) == '2' | substr(gr24,1,1) == '3')
 
-sankey type15  gr20  gr22  gr24 if (substr(status15,1,1) == '1') & (alder >= 60 & alder <=80)
+generate grovinndeling24 = "Ute" if (substr(gr24,1,1) == "1" | substr(gr24,1,1) == "2" | substr(gr24,1,1) == "3")
+replace grovinndeling24 = "Enebolig/rekkehus" if (substr(gr24,1,1) == "4" | substr(gr24,1,1) == "6")
+replace grovinndeling24 = "Andre" if (substr(gr24,1,1) == "5" | substr(gr24,1,1) == "7" | substr(gr24,1,1) == "8" | substr(gr24,1,1) == "9")
 
 
+textblock Visualiseringer
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+endblock
+
+sankey type15 inndeling24 gr24 if (substr(status15,1,1) == '1')
+sankey type15 gr20 gr22 gr24 if (substr(status15,1,1) == '1') 
+
+sankey grovinndeling15 grovinndeling24 gr24
+sankey grovinndeling15 grovinndeling24 gr24 if (grovinndeling15 == 'Enebolig/rekkehus')
+
+sankey grovinndeling15 grovinndeling20 grovinndeling22 grovinndeling24
 
 
-
-
+reshape-to-panel gr
+tabulate gr date@panel, colpct
+tabulate gr date@panel
 
