@@ -3,7 +3,7 @@ require no.ssb.fdb:42 as db
 create-dataset boligtyper
 
 let maxAlder = 80
-let minAlder = 60
+let minAlder = 65
 
 import db/BEFOLKNING_STATUSKODE 2015-01-01 as status15
 keep if substr(status15,1,1) == '1'
