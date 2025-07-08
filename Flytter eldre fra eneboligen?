@@ -1,141 +1,96 @@
 require no.ssb.fdb:42 as db
 
-create-dataset boligtyper
+create-dataset Enebolig
 
+let start = 2015
 
-textblock Angir kohort
------------------------------------------------------------------------------------------------------------------------------------------------------------
+let lokkeStart = 2016
+let lokkeSlutt = 2024
+
+let startAar = date_fmt($start)
+
+let minAlder = 65
+let maxAlder = 75
+
+textblock
+Første år ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 endblock
 
-let maxAlder = 80
-let minAlder = 60
+import db/BEFOLKNING_STATUSKODE $startAar as statusStart 
+keep if substr(statusStart,1,1) == '1'
 
-
-textblock henter statuskode og alder for første år i perioden
------------------------------------------------------------------------------------------------------------------------------------------------------------
-endblock
-
-import db/BEFOLKNING_STATUSKODE 2015-01-01 as status15
-keep if substr(status15,1,1) == '1'
+import db/BEFOLKNING_KOMMNR_FORMELL $startAar as komStart
+keep if inlist(substr(komStart,1,4),"1103","1141","1142")
 
 import db/BEFOLKNING_FOEDSELS_AAR_MND as faarmnd 
-generate alder = 2015-int(faarmnd/100)
-keep if (alder >= $minAlder & alder <= $maxAlder) 
+generate alder = $start-int(faarmnd/100)
+keep if (alder >= $minAlder & alder <= $maxAlder)
 
-textblock 2015
------------------------------------------------------------------------------------------------------------------------------------------------------------
+import db/BOFORHOLD_BYGNINGSTYPE_AGGR $startAar as byggningstypeStart
+keep if inlist(substr(byggningstypeStart,1,2), "01","03")
+generate enebolig = "Enbolig/rekkehus (2015)" 
+
+textblock
+Løkke ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 endblock
 
-//2015
-import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2015-01-01 as type15
-import db/BEFOLKNING_KOMMNR_FORMELL 2015-01-01 as bosted15
-keep if substr(bosted15,1,4) == '1103' | substr(bosted15,1,4) == '1141' | substr(bosted15,1,4) == '1142'
+for år in $lokkeStart : $lokkeSlutt
+  let bygg_dato = $år ++ "-01-01"
+  let bygg_år = Bygg ++ $år
+  import db/BOFORHOLD_BYGNINGSTYPE_AGGR $bygg_dato as $bygg_år 
+end
 
-generate kom15 = "Stavanger" if (substr(bosted15,1,4) == '1103' | substr(bosted15,1,4) == '1141' | substr(bosted15,1,4) == '1142')
+for år in $lokkeStart : $lokkeSlutt
+  let status_dato = $år ++ "-01-01"
+  let status_år = status ++ $år
+  import  db/BEFOLKNING_STATUSKODE $status_dato as $status_år
+end
 
-generate grovinndeling15 = "Andre" if (substr(type15,1,2) != '01' & substr(type15,1,2) != '03')
-replace grovinndeling15 = "Enebolig/rekkehus" if (substr(type15,1,2) == '01' | substr(type15,1,2) == '03')
+for år in $lokkeStart : $lokkeSlutt
+  let kom_dato = $år ++ "-01-01"
+  let kom_år = kom ++ $år
+  import  db/BEFOLKNING_KOMMNR_FORMELL $kom_dato as $kom_år
+end
+
+for år in $lokkeStart : $lokkeSlutt
+  let statusVar = status ++ $år
+  let byggVar = Bygg ++ $år
+  let komVar = kom ++ $år
+  let inndeling = inndeling ++ $år
+
+  generate $inndeling = "Død" if (substr($statusVar,1,1) == '5')
+  
+  replace $inndeling = "Utvandret" if (substr($statusVar,1,1) == '3')
+  
+  replace $inndeling = "Flyttet ut av Stavanger" if \
+    (substr($statusVar,1,1) == '1') & \
+    (substr($komVar,1,4) != '1103' & substr($komVar,1,4) != '1141' & substr($komVar,1,4) != '1142')
+  
+  replace $inndeling = "Enebolig/rekkehus" if \
+    inlist(substr($byggVar,1,2), "01", "03") & \
+    (substr($statusVar,1,1) == '1') & \
+    (inlist(substr($komVar,1,4),'1103','1141','1142'))
+  
+ replace $inndeling = "Leilighet/blokk" if \
+    (inlist(substr($byggVar,1,2), "02", "04", "05", "06") & \
+    (substr($statusVar,1,1) == '1') & \
+    inlist(substr($komVar,1,4),'1103','1141','1142'))
+end
 
 
-
-textblock 2020
------------------------------------------------------------------------------------------------------------------------------------------------------------
+textblock
+Visualisering ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 endblock
 
-import db/BEFOLKNING_STATUSKODE 2020-01-01 as status20
-import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2020-01-01 as type20
-import db/BEFOLKNING_KOMMNR_FORMELL 2020-01-01 as bosted20
-
-generate gr20 = "1 Død" if substr(status20,1,1) == '5'
-replace gr20 = "2 Utvandret" if (substr(status20,1,1) == '3')
-replace gr20 = "3 Ut av Stavanger" if (substr(status20,1,1) == '1') & (substr(bosted20,1,4) != '1103')
-replace gr20 = "4 Enebolig" if (substr(status20,1,1) == '1' ) & (substr(bosted20,1,4) == '1103') & (substr(type20,1,2) == "01")
-replace gr20 = "5 Tomannsbolig" if (substr(status20,1,1) == '1' ) & (substr(bosted20,1,4) == '1103') & (substr(type20,1,2) == "02")
-replace gr20 = "6 Rekke/kjedehus, andre småhus" if (substr(status20,1,1) == '1' ) & (substr(bosted20,1,4) == '1103') & (substr(type20,1,2) == "03")
-replace gr20 = "7 Store boligbygg" if (substr(status20,1,1) == '1' ) & (substr(bosted20,1,4) == '1103') & (substr(type20,1,2) == "04")
-replace gr20 = "8 Bygning for bofellesskap" if (substr(status20,1,1) == '1' ) & (substr(bosted20,1,4) == '1103') & (substr(type20,1,2) == "05")
-replace gr20 = "9 Andre bygningstyper" if (substr(status20,1,1) == '1' ) & (substr(bosted20,1,4) == '1103') & (substr(type20,1,2) == "06")
-
-generate inndeling20 = "Inne" if (substr(gr20,1,1) != '1' & substr(gr20,1,1) != '2' & substr(gr20,1,1) != '3')
-replace inndeling20 = "Ute" if (substr(gr20,1,1) == '1' | substr(gr20,1,1) == '2' | substr(gr20,1,1) == '3')
-
-generate grovinndeling20 = "Ute" if (substr(gr20,1,1) == '1' | substr(gr20,1,1) == '2' | substr(gr20,1,1) == '3')
-replace grovinndeling20 = "Enebolig/rekkehus" if (substr(gr20,1,1) == '4' | substr(gr20,1,1) == '6')
-replace grovinndeling20 = "Andre" if (substr(gr20,1,1) == '5' | substr(gr20,1,1) == '7'  | substr(gr20,1,1) == '8' |  substr(gr20,1,1) == '9')
-
-
-textblock 2022
------------------------------------------------------------------------------------------------------------------------------------------------------------
-endblock
-
-import db/BEFOLKNING_STATUSKODE 2022-01-01 as status22
-import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2022-01-01 as type22
-import db/BEFOLKNING_KOMMNR_FORMELL 2022-01-01 as bosted22
-
-generate gr22 = "1 Død" if substr(status22,1,1) == '5'
-replace gr22 = "2 Utvandret" if (substr(status22,1,1) == '3')
-replace gr22 = "3 Ut av Stavanger" if (substr(status22,1,1) == '1') & (substr(bosted22,1,4) != '1103')
-replace gr22 = "4 Enebolig" if (substr(status22,1,1) == '1' ) & (substr(bosted22,1,4) == '1103') & (substr(type22,1,2) == "01")
-replace gr22 = "5 Tomannsbolig" if (substr(status22,1,1) == '1' ) & (substr(bosted22,1,4) == '1103') & (substr(type22,1,2) == "02")
-replace gr22 = "6 Rekke/kjedehus, andre småhus" if (substr(status22,1,1) == '1' ) & (substr(bosted22,1,4) == '1103') & (substr(type22,1,2) == "03")
-replace gr22 = "7 Store boligbygg" if (substr(status22,1,1) == '1' ) & (substr(bosted22,1,4) == '1103') & (substr(type22,1,2) == "04")
-replace gr22 = "8 Bygning for bofellesskap" if (substr(status22,1,1) == '1' ) & (substr(bosted22,1,4) == '1103') & (substr(type22,1,2) == "05")
-replace gr22 = "9 Andre bygningstyper" if (substr(status22,1,1) == '1' ) & (substr(bosted22,1,4) == '1103') & (substr(type22,1,2) == "06")
-
-generate inndeling22 = "Inne" if (substr(gr22,1,1) != '1' & substr(gr22,1,1) != '2' & substr(gr22,1,1) != '3')
-replace inndeling22 = "Ute" if (substr(gr22,1,1) == '1' | substr(gr22,1,1) == '2' | substr(gr22,1,1) == '3')
-
-generate grovinndeling22 = "Ute" if (substr(gr22,1,1) == "1" | substr(gr22,1,1) == "2" | substr(gr22,1,1) == "3")
-replace grovinndeling22 = "Enebolig/rekkehus" if (substr(gr22,1,1) == "4" | substr(gr22,1,1) == "6")
-replace grovinndeling22 = "Andre" if (substr(gr22,1,1) == "5" | substr(gr22,1,1) == "7" | substr(gr22,1,1) == "8" | substr(gr22,1,1) == "9")
-
-
-textblock 2024
------------------------------------------------------------------------------------------------------------------------------------------------------------
-endblock
-
-import db/BEFOLKNING_STATUSKODE 2024-01-01 as status24
-import db/BOFORHOLD_BYGNINGSTYPE_AGGR 2024-01-01 as type24
-import db/BEFOLKNING_KOMMNR_FORMELL 2024-01-01 as bosted24
+sankey enebolig \
+  inndeling2020 \
+  inndeling2024
 
 
 
-generate gr24 = "1 Død" if substr(status24,1,1) == '5'
-replace gr24 = "2 Utvandret" if (substr(status24,1,1) == '3')
-replace gr24 = "3 Ut av Stavanger" if (substr(status24,1,1) == '1') & (substr(bosted24,1,4) != '1103')
-replace gr24 = "4 Enebolig" if (substr(status24,1,1) == '1' ) & (substr(bosted24,1,4) == '1103') & (substr(type24,1,2) == "01")
-replace gr24 = "5 Tomannsbolig" if (substr(status24,1,1) == '1' ) & (substr(bosted24,1,4) == '1103') & (substr(type24,1,2) == "02")
-replace gr24 = "6 Rekke/kjedehus, andre småhus" if (substr(status24,1,1) == '1' ) & (substr(bosted24,1,4) == '1103') & (substr(type24,1,2) == "03")
-replace gr24 = "7 Store boligbygg" if (substr(status24,1,1) == '1' ) & (substr(bosted24,1,4) == '1103') & (substr(type24,1,2) == "04")
-replace gr24 = "8 Bygning for bofellesskap" if (substr(status24,1,1) == '1' ) & (substr(bosted24,1,4) == '1103') & (substr(type24,1,2) == "05")
-replace gr24 = "9 Andre bygningstyper" if (substr(status24,1,1) == '1' ) & (substr(bosted24,1,4) == '1103') & (substr(type24,1,2) == "06")
-
-generate inndeling24 = "Inne" if (substr(gr24,1,1) != '1' & substr(gr24,1,1) != '2' & substr(gr24,1,1) != '3')
-replace inndeling24 = "Ute" if (substr(gr24,1,1) == '1' | substr(gr24,1,1) == '2' | substr(gr24,1,1) == '3')
-
-generate grovinndeling24 = "Ute" if (substr(gr24,1,1) == "1" | substr(gr24,1,1) == "2" | substr(gr24,1,1) == "3")
-replace grovinndeling24 = "Enebolig/rekkehus" if (substr(gr24,1,1) == "4" | substr(gr24,1,1) == "6")
-replace grovinndeling24 = "Andre" if (substr(gr24,1,1) == "5" | substr(gr24,1,1) == "7" | substr(gr24,1,1) == "8" | substr(gr24,1,1) == "9")
 
 
-textblock Visualiseringer
------------------------------------------------------------------------------------------------------------------------------------------------------------
-endblock
-
-sankey type15 inndeling24 gr24 if (substr(status15,1,1) == '1')
-sankey type15 gr20 gr22 gr24 if (substr(status15,1,1) == '1') 
-
-sankey grovinndeling15 grovinndeling24 gr24
-sankey grovinndeling15 grovinndeling24 gr24 if (grovinndeling15 == 'Enebolig/rekkehus')
-
-sankey grovinndeling15 grovinndeling20 grovinndeling22 grovinndeling24
 
 
-textblock Tabeller
------------------------------------------------------------------------------------------------------------------------------------------------------------
-endblock
 
-reshape-to-panel gr
-tabulate gr date@panel, colpct
-tabulate gr date@panel
-
+  
