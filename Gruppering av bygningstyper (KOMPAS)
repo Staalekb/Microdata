@@ -1,0 +1,8 @@
+let aar = 2024
+let dato_aar = date_fmt($aar)
+
+generate byggType_kompas++$aar = "5 Andre bygg enn boligbygg"
+replace byggType_kompas++$aar = "4 Blokk" if inlist(substr(byggningstype++$aar,1,3), '142','143','145','146','152')
+replace byggType_kompas++$aar = "3 Horisontaldelt tomannsbolig eller annet boligbygg med mindre enn 3 etasjer" if inlist(substr(byggningstype++$aar,1,3), '122','124','136','141','144','159') 
+replace byggType_kompas++$aar = "2 Hus i kjede, rekkehus/terrassehus, vertikaldelt tomannsbolig" if inlist(substr(byggningstype++$aar,1,3), '121','123','131','133','135','151')
+replace byggType_kompas++$aar = "1 Frittliggende enebolig eller våningshus" if inlist(substr(byggningstype++$aar,1,3), '111','112','113')
