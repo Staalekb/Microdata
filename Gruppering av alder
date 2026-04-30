@@ -1,0 +1,27 @@
+let aar = 2025
+let dato_aar = date_fmt($aar)
+
+
+import db/BEFOLKNING_FOEDSELS_AAR_MND as faarmnd
+generate alder = $aar - int(faarmnd/100)
+
+
+generate alder_todelt = "a - 0-17 år" if inrange(alder,0,17)
+replace alder_todelt = "b - 18 år eller eldre" if alder >= 18
+
+
+generate alder_tredelt = "a - 0-19 år" if alder <= 19
+replace alder_tredelt = "b - 20 - 64 år" if inrange(alder,20,64)
+replace alder_tredelt = "c - 65 år eller eldre" if alder >= 65
+
+
+generate alder_funksjon = "a - 0 år" if alder == 0
+replace alder_funksjon = "b - 1-5 år" if inrange(alder,1,5)
+replace alder_funksjon = "c - 6-12 år" if inrange(alder,6,12)
+replace alder_funksjon = "d - 13-15 år" if inrange(alder,13,15)
+replace alder_funksjon = "e - 16-19 år" if inrange(alder,16,19)
+replace alder_funksjon = "f - 20-44 år" if inrange(alder,20,44)
+replace alder_funksjon = "g - 45-66 år" if inrange(alder,45,66)
+replace alder_funksjon = "h - 67-79 år" if inrange(alder,67,79)
+replace alder_funksjon = "i - 80-89 år" if inrange(alder,80,89)
+replace alder_funksjon = "j - 90 år eller eldre" if alder > 90
