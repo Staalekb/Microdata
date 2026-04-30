@@ -1,0 +1,10 @@
+import db/BEFOLKNING_INVKAT as invkat 
+
+// Todelt
+generate innvandrerkategori_todelt = "1 Minst en norsk forelder" if inlist(substr(invkat,1,1), 'A','E','F','G')
+replace innvandrerkategori_todelt = "2 Innvandrere og norskfødte med innvandrerforeldre" if inlist(substr(invkat,1,1), 'B','C')
+
+// Tredelt
+generate innvandrerkategori_tredelt = "1 Minst en norsk forelder" if inlist(substr(invkat,1,1), 'A','E','F','G')
+replace innvandrerkategori_tredelt = "2 Norskfødte med innvandrerforeldre" if (substr(invkat,1,1) == 'C'
+replace innvandrerkategori_tredelt = "3 Innvandrere" if (substr(invkat,1,1) == 'B'
