@@ -1,0 +1,8 @@
+let aar = 2025
+let dato_aar = date_fmt($aar)
+
+import db/BEFOLKNING_REGSTAT_FAMTYP $dato_aar as famtype++$aar
+generate fam_gr_detalj++$aar = "1 Enpersonfamilie" if substr(famtype++$aar,1,1) == '1'
+replace fam_gr_detalj++$aar = "2 Familier/par med små barn (0-5 år)" if inlist(substr(famtype++$aar,1,3), '2.1','2.3')
+replace fam_gr_detalj++$aar = "3 Familier/par med store barn (6-17 år)" if inlist(substr(famtype++$aar,1,3), '2.2','2.4')
+replace fam_gr_detalj++$aar = "4 Andre familier" if substr(famtype++$aar,1,1) == '3'
